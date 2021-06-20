@@ -1,30 +1,73 @@
 import 'dart:convert';
 
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class Home extends StatefulWidget {
+  final List<CameraDescription>? cameras;
+
+  Home({this.cameras});
+
   @override
   _HomeState createState() => _HomeState();
 }
 
 class _HomeState extends State<Home> {
-  String imageUrl = '';
+  String _imageUrl = '';
   bool _isLoading = true;
+
+  late CameraController _cameraController;
+
   @override
   void initState() {
-    getImageFromApi().then((value) {
-      imageUrl = value;
-    }).then((_) => setState(() {
-          _isLoading = false;
-        }));
+    _getImageFromApi().then(
+      (value) {
+        _imageUrl = value;
+      },
+    ).then(
+      (_) {
+        _cameraController =
+            CameraController(widget.cameras![0], ResolutionPreset.max);
+        _cameraController.initialize().then(
+          (_) {
+            if (!mounted) {
+              return;
+            }
+            setState(
+              () {
+                _isLoading = false;
+              },
+            );
+          },
+        );
+      },
+    );
     super.initState();
+  }
+
+  Future<String> _getImageFromApi() {
+    final Uri _url = Uri.parse('https://fakeface.rest/face/json');
+    return http.get(_url).then(
+      (http.Response response) {
+        final Map<String, dynamic> _fetchedData = jsonDecode(response.body);
+        return _fetchedData['image_url'].toString();
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final double _height = MediaQuery.of(context).size.height;
+    print('Height: $_height');
     return _isLoading
-        ? CircularProgressIndicator()
+        ? const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(
+                color: Color(0xFF9C7CF5),
+              ),
+            ),
+          )
         : Scaffold(
             backgroundColor: Colors.white,
             appBar: AppBar(
@@ -32,33 +75,38 @@ class _HomeState extends State<Home> {
                 icon: Icon(Icons.arrow_back),
                 onPressed: () {},
               ),
-              title: Text('Savings'),
+              title: const Text('Savings'),
               centerTitle: true,
               elevation: 0,
             ),
             body: Stack(
               children: [
                 Positioned(
-                  top: 200,
+                  top: _height / 9,
                   left: 0,
                   right: 0,
                   bottom: 0,
                   child: Container(
-                    height: 300,
+                    height: _height / 2.8,
                     color: Colors.grey,
-                    child: Text('Here I am'),
+                    child: CameraPreview(_cameraController),
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(20),
+                const Padding(
+                  padding: EdgeInsets.all(20),
                   child: TextField(
                     decoration: InputDecoration(
+                      enabledBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Color(0xFF9C7CF5),
+                        ),
+                      ),
                       hintText: 'Enter UPI Number',
                     ),
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
                   child: Text(
                     'Pay through UPI',
                     style: TextStyle(
@@ -68,20 +116,20 @@ class _HomeState extends State<Home> {
                 ),
                 DraggableScrollableSheet(
                   initialChildSize: 0.25,
-                  builder: (BuildContext context, myscrollController) {
+                  builder: (_, scrollController) {
                     return Container(
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(15),
-                          topRight: Radius.circular(15),
+                          topLeft: Radius.circular(25),
+                          topRight: Radius.circular(25),
                         ),
                       ),
                       child: ListView(
-                        controller: myscrollController,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(left: 20, top: 20),
+                        controller: scrollController,
+                        children: <Widget>[
+                          const Padding(
+                            padding: EdgeInsets.only(left: 20, top: 20),
                             child: Text(
                               'Search Contact',
                               style: TextStyle(
@@ -92,22 +140,38 @@ class _HomeState extends State<Home> {
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.only(
-                                left: 25, top: 20, right: 20, bottom: 20),
+                            padding: EdgeInsets.only(
+                              left: 25,
+                              top: 20,
+                              right: 20,
+                              bottom: 20,
+                            ),
                             child: TextField(
                               decoration: InputDecoration(
-                                suffixIcon: Icon(Icons.person),
+                                enabledBorder: UnderlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: Color(0xFF9C7CF5),
+                                  ),
+                                ),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    Icons.person,
+                                    color: Color(0xFF9C7CF5),
+                                  ),
+                                  onPressed: () async {},
+                                ),
                                 hintText: 'Select Number',
                               ),
                             ),
                           ),
                           ListTile(
                             leading: CircleAvatar(
-                              backgroundImage: NetworkImage(''),
+                              backgroundImage: NetworkImage(_imageUrl),
                             ),
-                            title: Text(
-                              'Sapinder Singh',
+                            title: const Text(
+                              'Sumanth Verma',
                             ),
+                            subtitle: Text('7530009088'),
                           ),
                         ],
                       ),
@@ -117,12 +181,5 @@ class _HomeState extends State<Home> {
               ],
             ),
           );
-  }
-
-  Future<String> getImageFromApi() async {
-    var url = Uri.parse('https://fakeface.rest/face/json');
-    var response = await http.get(url);
-    var data = jsonDecode(response.body);
-    return data['image_url'].toString();
   }
 }

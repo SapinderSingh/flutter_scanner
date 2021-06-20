@@ -2,15 +2,13 @@
 
 A new Flutter project.
 
-## Getting Started
+## Things I did in this project - 
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
-
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+In this project I am using http plugin to fetch the data from api and using camera plugin to display the back camera. 
+ - Made the Project null safe. 
+ - Made the exact UI which was in the provided screenshot.
+ - fetching the profile picture on app startup 
+ - Starting the mobile camera on app startup.
+ - Added CircularProgressIndicator to indicate user to wait for better UX.
+ - Heights and widths are dyanmically calculated making the app responsive.
+ 
